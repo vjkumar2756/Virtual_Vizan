@@ -35,12 +35,13 @@ Unlike conventional chatbots that simply generate text, VIZAN's core computation
 - **Expectation Maximization (EM)**: Gaussian Mixture Models parameter estimation with log-likelihood convergence.
 - **Hidden Markov Models (HMM)**: Forward evaluation algorithm and Viterbi decoding algorithm.
 
-### 4. 🤖 Intelligent Conversational Problem Solver
-- Dual-layer architecture:
-  - Deterministic Rule Engine for command detection.
-  - Groq LLM integration (`openai/gpt-oss-120b`) for natural, fluent conversation in English and Hinglish.
-  - Multi-turn conversational memory persisted in SQLite database.
-  - Guaranteed mathematical integrity: All algorithm computations run through actual Python implementations.
+### 4. 🤖 Groq Conversational Intelligence & Execution Architecture
+- **Multi-Stage Processing Pipeline**:
+  1. **Natural Language Understanding & Semantic Parsing**: Groq API parses user queries in English, Hindi, or Hinglish into structured JSON command payloads (`action`, `algorithm`, `start_node`, `goal_node`).
+  2. **Deterministic Algorithm Execution (Pure Python)**: Algorithms are executed 100% in pure Python (`astar.py`, `bfs.py`, etc.). The LLM **never** simulates or invents mathematical or pathfinding results.
+  3. **Conversational Explanation**: Groq takes the verified Python output (path, cost, nodes expanded, runtime) and explains it in simple, intuitive language.
+  4. **Multi-Turn Context & Memory**: Continuous SQLite persistence (`vizan.db`) enables multi-turn memory retention.
+  5. **Guaranteed Offline Fallback**: If the Groq API key is missing or offline, the system automatically falls back to the deterministic RuleEngine, ensuring all algorithms remain 100% executable through both chat and the visual dashboard.
 
 ---
 
@@ -131,3 +132,4 @@ VIZAN/
 └── tests/                           # Unit Test Suite
     └── test_search.py               # Search algorithms tests
 ```
+
