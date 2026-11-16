@@ -1,0 +1,31 @@
+# Environment and secrets
+.env
+VIZAN/.env
+*.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Databases
+*.db
+*.sqlite3
+VIZAN/storage/*.db
+
+# Testing and cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor and OS
+.DS_Store
+.idea/
+.vscode/
