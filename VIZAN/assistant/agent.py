@@ -21,15 +21,36 @@ from VIZAN.storage.database import save_message, get_recent_messages, clear_sess
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-# Initialize Groq client
+# Initialize Groq client helper
 groq_client = None
-api_key = os.getenv("GROQ_API_KEY")
-if api_key and api_key.startswith("gsk_"):
-    try:
-        from groq import Groq
-        groq_client = Groq(api_key=api_key)
-    except Exception as e:
-        print(f"Notice: Groq client init skipped ({e})")
+
+def get_groq_client():
+    global groq_client
+    if groq_client is not None:
+        return groq_client
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        try:
+            import streamlit as st
+            api_key = st.secrets.get("GROQ_API_KEY")
+        except Exception:
+            pass
+
+    if api_key:
+        api_key = str(api_key).strip().strip('"').strip("'")
+
+    if api_key and api_key.startswith("gsk_"):
+        try:
+            from groq import Groq
+            groq_client = Groq(api_key=api_key)
+            return groq_client
+        except Exception as e:
+            print(f"Notice: Groq client init skipped ({e})")
+    return None
+
+# Attempt early init
+get_groq_client()
 
 GROQ_MODELS = [
     os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
@@ -191,7 +212,8 @@ class VizanAgent:
             }
             return {"action": action_map[rule_match.intent]}
 
-        if groq_client:
+        client = get_groq_client()
+        if client:
             prompt = f"""You are the intent parser for VIZAN AI Assistant.
 Analyze the user's message and output a JSON object with these exact keys:
 - action: one of ["RUN_ALGORITHM", "COMPARE_ALGORITHMS", "CONCEPT_QUESTION", "GENERAL_CHAT", "RESET", "HELP"]
@@ -211,7 +233,7 @@ User Message: {json.dumps(user_text)}
 """
             for model_id in GROQ_MODELS:
                 try:
-                    res = groq_client.chat.completions.create(
+                    res = client.chat.completions.create(
                         model=model_id,
                         messages=[{"role": "user", "content": prompt}],
                         temperature=0.1,
@@ -251,7 +273,8 @@ User Message: {json.dumps(user_text)}
         Takes the genuine Python SearchResult and uses Groq to generate a simple,
         conversational explanation of the real numbers and path.
         """
-        if groq_client:
+        client = get_groq_client()
+        if client:
             prompt = f"""The user asked: {json.dumps(user_query)}
 
 Our Python search engine executed the algorithm and produced this EXACT verified result:
@@ -272,7 +295,7 @@ Instructions:
 """
             for model_id in GROQ_MODELS:
                 try:
-                    res = groq_client.chat.completions.create(
+                    res = client.chat.completions.create(
                         model=model_id,
                         messages=[
                             {"role": "system", "content": SYSTEM_PROMPT},
@@ -298,7 +321,8 @@ Instructions:
         Answers general questions, explains AI concepts, or conducts natural
         conversation using Groq API with multi-turn memory.
         """
-        if groq_client:
+        client = get_groq_client()
+        if client:
             messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
             if history:
@@ -313,7 +337,7 @@ Instructions:
 
             for model_id in GROQ_MODELS:
                 try:
-                    response = groq_client.chat.completions.create(
+                    response = client.chat.completions.create(
                         model=model_id,
                         messages=messages,
                         temperature=0.7,
